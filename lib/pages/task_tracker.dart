@@ -153,6 +153,7 @@ class TaskTrackerState extends State<TaskTracker> {
               itemBuilder: (context, index) {
                 final task = tasks[index];
                 return Card(
+                  margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   color: Colors.indigoAccent[700],
                   child: ListTile(
                     leading: Theme(
@@ -181,6 +182,7 @@ class TaskTrackerState extends State<TaskTracker> {
                         decoration: task['done']
                             ? TextDecoration.lineThrough
                             : TextDecoration.none,
+                        decorationThickness: 4.0,
                         color: Colors.purple[50],
                         fontWeight: FontWeight.w500,
                         fontSize: 17,
