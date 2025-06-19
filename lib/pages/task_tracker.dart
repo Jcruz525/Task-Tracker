@@ -60,6 +60,38 @@ class TaskTrackerState extends State<TaskTracker> {
     });
   }
 
+  void editTask(int index) {
+    final TextEditingController editTaskController = TextEditingController(
+      text: tasks[index]['title'],
+    );
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Edit this task!"),
+          content: TextField(controller: editTaskController),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  tasks[index]['title'] = editTaskController.text;
+                  Navigator.pop(context);
+                });
+              },
+              child: Text('Accept'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text("Exit"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,7 +130,7 @@ class TaskTrackerState extends State<TaskTracker> {
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           Expanded(
                             child: Text(
@@ -188,9 +220,18 @@ class TaskTrackerState extends State<TaskTracker> {
                         fontSize: 17,
                       ),
                     ),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete, color: Colors.purple[50]),
-                      onPressed: () => deleteTask(index),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.purple[50]),
+                          onPressed: () => deleteTask(index),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.edit, color: Colors.purple[50]),
+                          onPressed: () => editTask(index),
+                        ),
+                      ],
                     ),
                   ),
                 );
