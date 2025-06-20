@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class LandingPage extends StatelessWidget {
-  final String testEmail = "Johnny@example.com";
-  final String testPassword = "testPass123";
+class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
+
+  @override
+  State<LandingPage> createState() => _LandingPageState();
+}
+
+class _LandingPageState extends State<LandingPage> {
+  final String testEmail = "Johnny@example.com";
+
+  final String testPassword = "testPass123";
+
+  final TextEditingController emailController = TextEditingController();
+
+  final TextEditingController passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -23,10 +34,49 @@ class LandingPage extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 50),
+            SizedBox(height: 25),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 25),
+              child: TextField(
+                style: TextStyle(
+                  color: Colors.indigoAccent[700],
+                  fontWeight: FontWeight.bold,
+                ),
+                controller: emailController,
+                decoration: InputDecoration(
+                  hintText: "Email",
+                  labelStyle: TextStyle(color: Colors.black),
+                  filled: true,
+                  fillColor: Colors.purple[50],
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(width: 2.0, color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 25),
+              child: TextField(
+                style: TextStyle(
+                  color: Colors.indigoAccent[700],
+                  fontWeight: FontWeight.bold,
+                ),
+                controller: passwordController,
+                decoration: InputDecoration(
+                  hintText: "Password",
+                  labelStyle: TextStyle(color: Colors.black),
+                  filled: true,
+                  fillColor: Colors.purple[50],
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(width: 2.0, color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 25),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                minimumSize: Size(200, 50),
+                minimumSize: Size(150, 50),
                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -38,8 +88,8 @@ class LandingPage extends StatelessWidget {
                 try {
                   UserCredential userCredential = await FirebaseAuth.instance
                       .createUserWithEmailAndPassword(
-                        email: testEmail,
-                        password: testPassword,
+                        email: emailController.text,
+                        password: passwordController.text,
                       );
                   print("User created: ${userCredential.user?.uid}");
                 } on FirebaseAuthException catch (e) {
@@ -49,10 +99,9 @@ class LandingPage extends StatelessWidget {
                     print("FirebaseAuth error: ${e.code}");
                   }
                 }
-                Navigator.pushNamed(context, '/tasktracker');
               },
               child: Text(
-                "Continue",
+                "Sign Up",
                 style: TextStyle(color: Colors.indigoAccent[700]),
               ),
             ),
