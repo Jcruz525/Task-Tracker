@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LandingPage extends StatelessWidget {
+  final String testEmail = "Johnny@example.com";
+  final String testPassword = "testPass123";
   const LandingPage({super.key});
 
   @override
@@ -31,7 +34,21 @@ class LandingPage extends StatelessWidget {
                 ),
                 textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              onPressed: () {
+              onPressed: () async {
+                try {
+                  UserCredential userCredential = await FirebaseAuth.instance
+                      .createUserWithEmailAndPassword(
+                        email: testEmail,
+                        password: testPassword,
+                      );
+                  print("User created: ${userCredential.user?.uid}");
+                } on FirebaseAuthException catch (e) {
+                  if (e.code == 'email-already-in-use') {
+                    print("User already exists.");
+                  } else {
+                    print("FirebaseAuth error: ${e.code}");
+                  }
+                }
                 Navigator.pushNamed(context, '/tasktracker');
               },
               child: Text(
