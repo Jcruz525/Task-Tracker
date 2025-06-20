@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:task_tracker/pages/task_tracker.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -9,6 +10,7 @@ class LandingPage extends StatefulWidget {
 }
 
 class _LandingPageState extends State<LandingPage> {
+  bool isLoggingIn = true;
   final String testEmail = "Johnny@example.com";
 
   final String testPassword = "testPass123";
@@ -16,6 +18,8 @@ class _LandingPageState extends State<LandingPage> {
   final TextEditingController emailController = TextEditingController();
 
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +48,10 @@ class _LandingPageState extends State<LandingPage> {
                 ),
                 controller: emailController,
                 decoration: InputDecoration(
+                  prefixIcon: Icon(
+                    Icons.email,
+                    color: Colors.indigoAccent[700],
+                  ),
                   hintText: "Email",
                   labelStyle: TextStyle(color: Colors.black),
                   filled: true,
@@ -57,12 +65,21 @@ class _LandingPageState extends State<LandingPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 25),
               child: TextField(
+                obscureText: true,
                 style: TextStyle(
                   color: Colors.indigoAccent[700],
                   fontWeight: FontWeight.bold,
                 ),
                 controller: passwordController,
                 decoration: InputDecoration(
+                  prefixIcon: Icon(
+                    Icons.password,
+                    color: Colors.indigoAccent[700],
+                  ),
+                  suffixIcon: Icon(
+                    Icons.visibility,
+                    color: Colors.indigoAccent[700],
+                  ),
                   hintText: "Password",
                   labelStyle: TextStyle(color: Colors.black),
                   filled: true,
@@ -71,6 +88,68 @@ class _LandingPageState extends State<LandingPage> {
                     borderSide: BorderSide(width: 2.0, color: Colors.white),
                   ),
                 ),
+              ),
+            ),
+            if (!isLoggingIn)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 50,
+                  vertical: 25,
+                ),
+                child: TextField(
+                  obscureText: true,
+                  style: TextStyle(
+                    color: Colors.indigoAccent[700],
+                    fontWeight: FontWeight.bold,
+                  ),
+                  controller: confirmPasswordController,
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(
+                      Icons.password,
+                      color: Colors.indigoAccent[700],
+                    ),
+                    suffixIcon: Icon(
+                      Icons.visibility,
+                      color: Colors.indigoAccent[700],
+                    ),
+                    hintText: "Confim Password",
+                    labelStyle: TextStyle(color: Colors.black),
+                    filled: true,
+                    fillColor: Colors.purple[50],
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(width: 2.0, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    isLoggingIn
+                        ? "Don't have an account?"
+                        : "Already have an account?",
+                    style: TextStyle(color: Colors.black),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        isLoggingIn = !isLoggingIn;
+                      });
+                      emailController.clear();
+                      passwordController.clear();
+                      confirmPasswordController.clear();
+                    },
+                    child: Text(
+                      isLoggingIn ? "Sign up here" : "Log in here",
+                      style: TextStyle(
+                        color: Colors.purple[50],
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             SizedBox(height: 25),
@@ -92,6 +171,14 @@ class _LandingPageState extends State<LandingPage> {
                         password: passwordController.text,
                       );
                   print("User created: ${userCredential.user?.uid}");
+                  User? user = FirebaseAuth.instance.currentUser;
+
+                  if (user != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => TaskTracker()),
+                    );
+                  }
                 } on FirebaseAuthException catch (e) {
                   if (e.code == 'email-already-in-use') {
                     print("User already exists.");
@@ -101,7 +188,7 @@ class _LandingPageState extends State<LandingPage> {
                 }
               },
               child: Text(
-                "Sign Up",
+                isLoggingIn ? "Log in" : "Sign up",
                 style: TextStyle(color: Colors.indigoAccent[700]),
               ),
             ),
