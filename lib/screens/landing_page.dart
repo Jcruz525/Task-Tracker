@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:task_tracker/pages/task_tracker.dart';
+import 'package:task_tracker/screens/task_tracker.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
