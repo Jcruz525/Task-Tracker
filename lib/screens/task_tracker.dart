@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class TaskTracker extends StatefulWidget {
   const TaskTracker({super.key});
@@ -92,15 +93,35 @@ class TaskTrackerState extends State<TaskTracker> {
     );
   }
 
+  String _todayDay = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _updateTodayDate();
+  }
+
+  void _updateTodayDate() {
+    final now = DateTime.now();
+    final dayNumber = DateFormat('d').format(now);
+    setState(() {
+      _todayDay = dayNumber;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.purple[50],
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Colors.purple[50]),
+          icon: Icon(
+            Icons.arrow_back_ios_new,
+            color: const Color.fromARGB(255, 243, 229, 245),
+          ),
           onPressed: () => Navigator.pop(context),
         ),
+
         title: Text(
           'Task Tracker',
           style: TextStyle(
@@ -110,6 +131,67 @@ class TaskTrackerState extends State<TaskTracker> {
           ),
         ),
         centerTitle: true,
+        backgroundColor: Colors.indigoAccent[700],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        selectedItemColor: Colors.purple[50],
+        unselectedItemColor: Colors.purple[50],
+        type: BottomNavigationBarType.fixed,
+        items: <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(Icons.calendar_today, size: 30, color: Colors.white),
+                Positioned(
+                  top: 4.5,
+                  right: 3.5,
+                  child: Container(
+                    padding: EdgeInsets.all(4),
+                    decoration: BoxDecoration(color: Colors.transparent),
+                    child: Text(
+                      _todayDay,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.purple[50],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            label: 'Today',
+          ),
+          BottomNavigationBarItem(
+            backgroundColor: Colors.white,
+            icon: Icon(
+              Icons.today,
+              size: 30,
+              color: Color.fromARGB(255, 243, 229, 245),
+            ),
+            label: 'Calendar',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.add,
+              size: 30,
+              color: Color.fromARGB(255, 243, 229, 245),
+            ),
+            label: 'Add',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search, size: 30),
+            label: 'Search',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.settings,
+              color: Color.fromARGB(255, 243, 229, 245),
+            ),
+            label: 'Settings',
+          ),
+        ],
         backgroundColor: Colors.indigoAccent[700],
       ),
       body: Column(

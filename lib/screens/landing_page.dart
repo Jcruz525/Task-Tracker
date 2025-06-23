@@ -165,26 +165,37 @@ class _LandingPageState extends State<LandingPage> {
               ),
               onPressed: () async {
                 try {
-                  UserCredential userCredential = await FirebaseAuth.instance
-                      .createUserWithEmailAndPassword(
-                        email: emailController.text,
-                        password: passwordController.text,
-                      );
-                  print("User created: ${userCredential.user?.uid}");
-                  User? user = FirebaseAuth.instance.currentUser;
-
-                  if (user != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => TaskTracker()),
-                    );
-                  }
-                } on FirebaseAuthException catch (e) {
-                  if (e.code == 'email-already-in-use') {
-                    print("User already exists.");
+                  if (isLoggingIn) {
+                    // Login flow
+                    UserCredential userCredential = await FirebaseAuth.instance
+                        .signInWithEmailAndPassword(
+                          email: emailController.text,
+                          password: passwordController.text,
+                        );
+                    print("Logged in: ${userCredential.user?.uid}");
                   } else {
-                    print("FirebaseAuth error: ${e.code}");
+                    // Signup flow
+                    if (passwordController.text !=
+                        confirmPasswordController.text.trim()) {
+                      print("Passwords do not match.");
+                      return;
+                    }
+
+                    UserCredential userCredential = await FirebaseAuth.instance
+                        .createUserWithEmailAndPassword(
+                          email: emailController.text,
+                          password: passwordController.text,
+                        );
+                    print("User created: ${userCredential.user?.uid}");
                   }
+
+                  // Navigate to TaskTracker if login/signup succeeds
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => TaskTracker()),
+                  );
+                } on FirebaseAuthException catch (e) {
+                  print("FirebaseAuth error: ${e.code}");
                 }
               },
               child: Text(
