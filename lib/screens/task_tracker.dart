@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 
 class TaskTracker extends StatefulWidget {
   const TaskTracker({super.key});
@@ -109,6 +110,27 @@ class TaskTrackerState extends State<TaskTracker> {
     });
   }
 
+  void _onBottomNavTap(int index) async {
+    if (index == 2) {
+      final result = await showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.indigoAccent[700],
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => const AddTaskBottomSheet(),
+      );
+      if (result != null) {
+        setState(() {
+          tasks.add(result);
+        });
+      }
+    } else if (index == 1) {
+      context.go('/calendar');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -137,6 +159,8 @@ class TaskTrackerState extends State<TaskTracker> {
         selectedItemColor: Colors.purple[50],
         unselectedItemColor: Colors.purple[50],
         type: BottomNavigationBarType.fixed,
+        currentIndex: 0,
+        onTap: _onBottomNavTap,
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Stack(
@@ -243,23 +267,6 @@ class TaskTrackerState extends State<TaskTracker> {
             ),
           ),
 
-          Padding(
-            padding: EdgeInsets.all(12.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    decoration: InputDecoration(labelText: 'Enter task'),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.add),
-                  onPressed: () => addTask(controller.text),
-                ),
-              ],
-            ),
-          ),
           SizedBox(height: 25),
           Expanded(
             child: ListView.builder(
@@ -321,6 +328,146 @@ class TaskTrackerState extends State<TaskTracker> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class AddTaskBottomSheet extends StatefulWidget {
+  const AddTaskBottomSheet({super.key});
+  @override
+  State<AddTaskBottomSheet> createState() => _AddTaskBottomSheetState();
+}
+
+class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _taskController = TextEditingController();
+  String _priority = 'Medium';
+  DateTime? _dueDate;
+  bool _isRecurring = false;
+
+  void _submitTask() {
+    if (_formKey.currentState!.validate()) {
+      final newTask = {
+        'title': _taskController.text,
+        'priority': _priority,
+        'dueDate': _dueDate,
+        'recurring': _isRecurring,
+        'done': false,
+      };
+      Navigator.pop(context, newTask);
+    }
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dueDate ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null) setState(() => _dueDate = picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        left: 20,
+        right: 20,
+        top: 20,
+      ),
+      child: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                cursorColor: Colors.purple[50],
+                style: TextStyle(color: Colors.purple[50]),
+                controller: _taskController,
+                decoration: InputDecoration(
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.purple[50]!, width: 1),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.purple[50]!, width: 2),
+                  ),
+                  errorBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.red, width: 2),
+                  ),
+                  focusedErrorBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.redAccent, width: 3),
+                  ),
+                  labelText: 'Task Title',
+                  labelStyle: TextStyle(color: Colors.purple[50]),
+                ),
+                validator: (value) => value!.isEmpty ? 'Enter a task' : null,
+              ),
+              DropdownButtonFormField<String>(
+                value: _priority,
+                style: TextStyle(
+                  color: Colors.purple[50]!,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+                dropdownColor: Colors.indigoAccent[700],
+                decoration: InputDecoration(
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.purple[50]!, width: 1),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.purple[50]!, width: 2),
+                  ),
+                  errorBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.red, width: 2),
+                  ),
+                  focusedErrorBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.redAccent, width: 3),
+                  ),
+                  labelText: 'Priority',
+                  labelStyle: TextStyle(color: Colors.purple[50]),
+                ),
+                items: ['High', 'Medium', 'Low']
+                    .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+                    .toList(),
+                onChanged: (val) => setState(() => _priority = val!),
+              ),
+              ListTile(
+                title: Text(
+                  _dueDate == null
+                      ? 'Pick a due date'
+                      : 'Due: ${DateFormat.yMMMd().format(_dueDate!)}',
+                  style: TextStyle(color: Colors.purple[50]),
+                ),
+                trailing: Icon(Icons.calendar_today, color: Colors.purple[50]),
+                onTap: _pickDate,
+              ),
+              SwitchListTile(
+                title: Text(
+                  'Recurring Task',
+                  style: TextStyle(color: Colors.purple[50]),
+                ),
+                value: _isRecurring,
+                onChanged: (val) => setState(() => _isRecurring = val),
+                activeColor: Colors.purple[50], //
+                activeTrackColor: Colors.green[500],
+                inactiveThumbColor: Colors.purple[50],
+                inactiveTrackColor: Colors.grey[700],
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _submitTask,
+                child: Text(
+                  'Add Task',
+                  style: TextStyle(color: Colors.indigoAccent[700]),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:task_tracker/screens/task_tracker.dart';
+import 'package:go_router/go_router.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -190,10 +190,7 @@ class _LandingPageState extends State<LandingPage> {
                   }
 
                   // Navigate to TaskTracker if login/signup succeeds
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => TaskTracker()),
-                  );
+                  context.go('/tasktracker');
                 } on FirebaseAuthException catch (e) {
                   print("FirebaseAuth error: ${e.code}");
                 }
