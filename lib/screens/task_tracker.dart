@@ -7,7 +7,7 @@ class TaskTracker extends StatefulWidget {
   @override
   TaskTrackerState createState() => TaskTrackerState();
 }
-
+// USE BLoC TO REFACTOR THIS PAGE
 class TaskTrackerState extends State<TaskTracker> {
   final List<Map<String, dynamic>> tasks = [];
   final TextEditingController controller = TextEditingController();
@@ -107,7 +107,7 @@ class TaskTrackerState extends State<TaskTracker> {
     final dayNumber = DateFormat('d').format(now);
     setState(() {
       _todayDay = dayNumber;
-    });
+    }); 
   }
 
   void _onBottomNavTap(int index) async {
