@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+
+// Make this Calendar functional and pull data from Firestore
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
 
