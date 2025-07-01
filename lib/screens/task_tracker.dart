@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class TaskTracker extends StatefulWidget {
   const TaskTracker({super.key});
   @override
   TaskTrackerState createState() => TaskTrackerState();
 }
-// USE BLoC TO REFACTOR THIS PAGE
+
 class TaskTrackerState extends State<TaskTracker> {
-  final List<Map<String, dynamic>> tasks = [];
   final TextEditingController controller = TextEditingController();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final String userId = FirebaseAuth.instance.currentUser!.uid;
+
   final List<String> commonTasks = [
     "Buy groceries",
     "Do laundry",
@@ -23,6 +27,7 @@ class TaskTrackerState extends State<TaskTracker> {
     "Study",
     "Meditate",
   ];
+
   final List<String> taskLabels = [
     "Groceries",
     "Laundry",
@@ -36,62 +41,22 @@ class TaskTrackerState extends State<TaskTracker> {
     "Calm",
   ];
 
-  void addTask(String task) {
+  void addTask(String task) async {
     if (task.isEmpty) return;
-    setState(() {
-      tasks.add({'title': task, 'done': false});
+    await _firestore.collection('users').doc(userId).collection('tasks').add({
+      'title': task,
+      'done': false,
+      'createdAt': Timestamp.now(),
     });
     controller.clear();
   }
 
-  void quickAdd(dynamic task) {
-    setState(() {
-      tasks.add({'title': task, 'done': false});
+  void quickAdd(String task) async {
+    await _firestore.collection('users').doc(userId).collection('tasks').add({
+      'title': task,
+      'done': false,
+      'createdAt': Timestamp.now(),
     });
-  }
-
-  void toggleTask(int index) {
-    setState(() {
-      tasks[index]['done'] = !tasks[index]['done'];
-    });
-  }
-
-  void deleteTask(int index) {
-    setState(() {
-      tasks.removeAt(index);
-    });
-  }
-
-  void editTask(int index) {
-    final TextEditingController editTaskController = TextEditingController(
-      text: tasks[index]['title'],
-    );
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Edit this task!"),
-          content: TextField(controller: editTaskController),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  tasks[index]['title'] = editTaskController.text;
-                  Navigator.pop(context);
-                });
-              },
-              child: Text('Accept'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text("Exit"),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   String _todayDay = '';
@@ -100,6 +65,11 @@ class TaskTrackerState extends State<TaskTracker> {
   void initState() {
     super.initState();
     _updateTodayDate();
+    _firestore.collection('users').doc(userId).collection('tasks').add({
+    'title': 'Test Task',
+    'done': false,
+    'createdAt': Timestamp.now(),
+  });
   }
 
   void _updateTodayDate() {
@@ -107,7 +77,7 @@ class TaskTrackerState extends State<TaskTracker> {
     final dayNumber = DateFormat('d').format(now);
     setState(() {
       _todayDay = dayNumber;
-    }); 
+    });
   }
 
   void _onBottomNavTap(int index) async {
@@ -122,9 +92,7 @@ class TaskTrackerState extends State<TaskTracker> {
         builder: (context) => const AddTaskBottomSheet(),
       );
       if (result != null) {
-        setState(() {
-          tasks.add(result);
-        });
+        await _firestore.collection('users').doc(userId).collection('tasks').add(result);
       }
     } else if (index == 1) {
       context.go('/calendar');
@@ -143,7 +111,6 @@ class TaskTrackerState extends State<TaskTracker> {
           ),
           onPressed: () => Navigator.pop(context),
         ),
-
         title: Text(
           'Task Tracker',
           style: TextStyle(
@@ -153,69 +120,6 @@ class TaskTrackerState extends State<TaskTracker> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.indigoAccent[700],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        selectedItemColor: Colors.purple[50],
-        unselectedItemColor: Colors.purple[50],
-        type: BottomNavigationBarType.fixed,
-        currentIndex: 0,
-        onTap: _onBottomNavTap,
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(Icons.calendar_today, size: 30, color: Colors.white),
-                Positioned(
-                  top: 4.5,
-                  right: 3.5,
-                  child: Container(
-                    padding: EdgeInsets.all(4),
-                    decoration: BoxDecoration(color: Colors.transparent),
-                    child: Text(
-                      _todayDay,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.purple[50],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            label: 'Today',
-          ),
-          BottomNavigationBarItem(
-            backgroundColor: Colors.white,
-            icon: Icon(
-              Icons.today,
-              size: 30,
-              color: Color.fromARGB(255, 243, 229, 245),
-            ),
-            label: 'Calendar',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.add,
-              size: 30,
-              color: Color.fromARGB(255, 243, 229, 245),
-            ),
-            label: 'Add',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search, size: 30),
-            label: 'Search',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.settings,
-              color: Color.fromARGB(255, 243, 229, 245),
-            ),
-            label: 'Settings',
-          ),
-        ],
         backgroundColor: Colors.indigoAccent[700],
       ),
       body: Column(
@@ -266,63 +170,74 @@ class TaskTrackerState extends State<TaskTracker> {
               },
             ),
           ),
-
           SizedBox(height: 25),
           Expanded(
-            child: ListView.builder(
-              itemCount: tasks.length,
-              itemBuilder: (context, index) {
-                final task = tasks[index];
-                return Card(
-                  margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  color: Colors.indigoAccent[700],
-                  child: ListTile(
-                    leading: Theme(
-                      data: Theme.of(context).copyWith(
-                        checkboxTheme: CheckboxThemeData(
-                          side: BorderSide(color: Colors.purple[50]!, width: 2),
-                        ),
-                      ),
-                      child: Checkbox(
-                        value: task['done'],
-                        onChanged: (value) => toggleTask(index),
-                        checkColor: Colors.purple[50],
-                        activeColor: Colors.green,
-                        fillColor: WidgetStateProperty.resolveWith((states) {
-                          if (states.contains(WidgetState.selected)) {
-                            return Colors.green;
-                          }
-                          return Colors.purple.shade50;
-                        }),
-                      ),
-                    ),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _firestore
+                  .collection('users')
+                  .doc(userId)
+                  .collection('tasks')
+                  .orderBy('createdAt', descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                print('Has data: ${snapshot.hasData}');
+  if (snapshot.hasError) print('Error: ${snapshot.error}');
+                if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
+  
+                final taskDocs = snapshot.data!.docs;
+print('Fetched tasks:');
+for (var doc in taskDocs) {
+  print(' - ${doc.data()}');
+}
 
-                    title: Text(
-                      task['title'],
-                      style: TextStyle(
-                        decoration: task['done']
-                            ? TextDecoration.lineThrough
-                            : TextDecoration.none,
-                        decorationThickness: 4.0,
-                        color: Colors.purple[50],
-                        fontWeight: FontWeight.w500,
-                        fontSize: 17,
-                      ),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
+                return ListView.builder(
+                  itemCount: taskDocs.length,
+                  itemBuilder: (context, index) {
+                    final doc = taskDocs[index];
+                    final task = doc.data() as Map<String, dynamic>;
+
+                    return Card(
+                      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      color: Colors.indigoAccent[700],
+                      child: ListTile(
+                        leading: Checkbox(
+                          value: task['done'],
+                          onChanged: (value) {
+                            _firestore
+                                .collection('users')
+                                .doc(userId)
+                                .collection('tasks')
+                                .doc(doc.id)
+                                .update({'done': value});
+                          },
+                          checkColor: Colors.purple[50],
+                          activeColor: Colors.green,
+                        ),
+                        title: Text(
+                          task['title'],
+                          style: TextStyle(
+                            decoration: task['done']
+                                ? TextDecoration.lineThrough
+                                : TextDecoration.none,
+                            color: Colors.purple[50],
+                            fontWeight: FontWeight.w500,
+                            fontSize: 17,
+                          ),
+                        ),
+                        trailing: IconButton(
                           icon: Icon(Icons.delete, color: Colors.purple[50]),
-                          onPressed: () => deleteTask(index),
+                          onPressed: () {
+                            _firestore
+                                .collection('users')
+                                .doc(userId)
+                                .collection('tasks')
+                                .doc(doc.id)
+                                .delete();
+                          },
                         ),
-                        IconButton(
-                          icon: Icon(Icons.edit, color: Colors.purple[50]),
-                          onPressed: () => editTask(index),
-                        ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -354,6 +269,7 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
         'dueDate': _dueDate,
         'recurring': _isRecurring,
         'done': false,
+        'createdAt': Timestamp.now(),
       };
       Navigator.pop(context, newTask);
     }
@@ -389,18 +305,6 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                 style: TextStyle(color: Colors.purple[50]),
                 controller: _taskController,
                 decoration: InputDecoration(
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.purple[50]!, width: 1),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.purple[50]!, width: 2),
-                  ),
-                  errorBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.red, width: 2),
-                  ),
-                  focusedErrorBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.redAccent, width: 3),
-                  ),
                   labelText: 'Task Title',
                   labelStyle: TextStyle(color: Colors.purple[50]),
                 ),
@@ -408,25 +312,9 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
               ),
               DropdownButtonFormField<String>(
                 value: _priority,
-                style: TextStyle(
-                  color: Colors.purple[50]!,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(color: Colors.purple[50]),
                 dropdownColor: Colors.indigoAccent[700],
                 decoration: InputDecoration(
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.purple[50]!, width: 1),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.purple[50]!, width: 2),
-                  ),
-                  errorBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.red, width: 2),
-                  ),
-                  focusedErrorBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.redAccent, width: 3),
-                  ),
                   labelText: 'Priority',
                   labelStyle: TextStyle(color: Colors.purple[50]),
                 ),
@@ -446,16 +334,10 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                 onTap: _pickDate,
               ),
               SwitchListTile(
-                title: Text(
-                  'Recurring Task',
-                  style: TextStyle(color: Colors.purple[50]),
-                ),
+                title: Text('Recurring Task', style: TextStyle(color: Colors.purple[50])),
                 value: _isRecurring,
                 onChanged: (val) => setState(() => _isRecurring = val),
-                activeColor: Colors.purple[50], //
-                activeTrackColor: Colors.green[500],
-                inactiveThumbColor: Colors.purple[50],
-                inactiveTrackColor: Colors.grey[700],
+                activeColor: Colors.purple[50],
               ),
               const SizedBox(height: 16),
               ElevatedButton(
