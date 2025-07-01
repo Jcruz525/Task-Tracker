@@ -8,6 +8,7 @@ import 'package:task_tracker/screens/calendar_screen.dart';
 import 'package:task_tracker/task_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,7 +50,7 @@ class MainScaffold extends StatefulWidget {
   State<MainScaffold> createState() => _MainScaffoldState();
 }
 class _MainScaffoldState extends State<MainScaffold> {
-  final int _currentIndex = 0;
+   int currentIndex = 0;
   final TaskStorage storage = TaskStorage();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   late String _todayDay;
@@ -93,7 +94,7 @@ class _MainScaffoldState extends State<MainScaffold> {
         selectedItemColor: Colors.purple[50],
         unselectedItemColor: Colors.purple[50],
         type: BottomNavigationBarType.fixed,
-        currentIndex: _currentIndex,
+        currentIndex: currentIndex,
         onTap: _onTap,
         backgroundColor: Colors.indigoAccent[700],
         items: <BottomNavigationBarItem>[
@@ -106,6 +107,8 @@ class _MainScaffoldState extends State<MainScaffold> {
                   top: 4.5,
                   right: 3.5,
                   child: Container(
+                    width: 22,
+                    alignment: Alignment.center,
                     padding: const EdgeInsets.all(4),
                     decoration: const BoxDecoration(color: Colors.transparent),
                     child: Text(
