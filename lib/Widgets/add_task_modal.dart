@@ -14,7 +14,7 @@ class _AddTaskModalState extends State<AddTaskModal> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _taskController = TextEditingController();
   String _priority = 'Medium';
-  DateTime? _dueDate;
+  DateTime? _dueDate = DateTime.now();
   bool _isRecurring = false;
 
   void _submitTask() async {
@@ -123,9 +123,7 @@ class _AddTaskModalState extends State<AddTaskModal> {
               ),
               ListTile(
                 title: Text(
-                  _dueDate == null
-                      ? 'Pick a due date'
-                      : 'Due: ${DateFormat.yMMMd().format(_dueDate!)}',
+                 'Due: ${DateFormat.yMMMd().format(_dueDate!)}',
                   style: TextStyle(color: Colors.purple[50]),
                 ),
                 trailing: Icon(Icons.calendar_today, color: Colors.purple[50]),
@@ -139,7 +137,7 @@ class _AddTaskModalState extends State<AddTaskModal> {
                 value: _isRecurring,
                 onChanged: (val) => setState(() => _isRecurring = val),
                 activeColor: Colors.purple[50],
-                activeTrackColor: Colors.green[500],
+                activeTrackColor: const Color.fromARGB(255, 21, 32, 21),
                 inactiveThumbColor: Colors.purple[50],
                 inactiveTrackColor: Colors.grey[700],
               ),

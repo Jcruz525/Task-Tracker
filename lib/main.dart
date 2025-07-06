@@ -12,6 +12,9 @@ import 'bloc/task_bloc.dart';
 import 'bloc/task_event.dart';
 import 'bloc/task_state.dart';
 import 'bloc/auth_cubit.dart';
+import 'widgets/add_task_modal.dart';
+import 'models/task.dart';
+import 'package:task_tracker/screens/search.dart';
 
 
 void main() async {
@@ -49,6 +52,10 @@ final GoRouter _router = GoRouter(
           builder: (context, state) => const CalendarPage(),
         ),
         
+        GoRoute(
+          path: '/search',
+          builder: (context, state) => const SearchPage(),
+        ),
       ],
     ),
   ],
@@ -64,7 +71,6 @@ class MainScaffold extends StatefulWidget {
 class _MainScaffoldState extends State<MainScaffold> {
    int currentIndex = 0;
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   late String _todayDay;
   late String userId;
 
@@ -77,26 +83,42 @@ class _MainScaffoldState extends State<MainScaffold> {
   }
 
   void _onTap(int index) async {
-    if (index == 2) {
-      final result = await showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.indigoAccent[700],
-        isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (context) => const AddTaskBottomSheet(),
+  if (index == 2) {
+    final result = await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.indigoAccent[700],
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => const AddTaskModal(),
+    );
+
+    if (result != null && result is Map<String, dynamic>) {
+      final task = Task(
+        id: '',
+        title: result['title'],
+        priority: result['priority'] ?? 'Medium',
+        dueDate: result['dueDate'] is DateTime ? result['dueDate'] : null,
+        recurring: result['recurring'] ?? false,
+        done: false,
+        createdAt: DateTime.now(),
       );
-      if (result != null) {
-        await _firestore.collection('users').doc(userId).collection('tasks').add(result);
-      }
-    } else if (index == 1) {
-      context.go('/calendar');
+
+      context.read<TaskBloc>().add(AddTask(task));
     }
-    else if (index == 0) {
-      context.go('/tasktracker');
-    }
+  } else if (index == 1) {
+    context.go('/calendar');
+  } else if (index == 0) {
+    context.go('/tasktracker');
   }
+  else if (index == 3) {
+    context.go('/search');
+  } else if (index == 4) {
+    context.go('/settings'); 
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {

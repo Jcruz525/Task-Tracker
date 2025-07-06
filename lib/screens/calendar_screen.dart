@@ -50,7 +50,9 @@ class _CalendarPageState extends State<CalendarPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Calendar'),
+        title:  Text('Calendar', style: TextStyle(color: Colors.purple[50], fontWeight: FontWeight.bold,
+              letterSpacing: .5,),),
+        centerTitle: true,
         backgroundColor: Colors.indigoAccent[700],
       ),
       body: BlocConsumer<TaskBloc, TaskState>(
@@ -125,6 +127,10 @@ class _CalendarPageState extends State<CalendarPage> {
                                   },
                                   checkColor: Colors.purple[50],
                                   activeColor: Colors.green,
+                                  side: BorderSide(
+                                    color: Colors.purple[50]!,
+                                    width: 2,
+                                  ),
                                 ),
                               ),
                             );
