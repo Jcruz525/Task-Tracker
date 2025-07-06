@@ -154,7 +154,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       const SizedBox(height: 20),
 
-                      // Add avatar selector here
+                     
                       _buildAvatarSelector(prefs.avatarUrl),
 
                       const SizedBox(height: 20),
