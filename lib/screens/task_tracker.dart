@@ -3,6 +3,12 @@ import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:task_tracker/bloc/task_bloc.dart';
+import 'package:task_tracker/bloc/task_event.dart';
+import 'package:task_tracker/bloc/task_state.dart';
+import 'package:task_tracker/models/task.dart';
+
 
 class TaskTracker extends StatefulWidget {
   const TaskTracker({super.key});
@@ -12,237 +18,237 @@ class TaskTracker extends StatefulWidget {
 
 class TaskTrackerState extends State<TaskTracker> {
   final TextEditingController controller = TextEditingController();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final String userId = FirebaseAuth.instance.currentUser!.uid;
 
   final List<String> commonTasks = [
     "Buy groceries",
     "Do laundry",
-    "Call mom",
-    "Pay bills",
-    "Clean kitchen",
-    "Workout",
-    "Walk dog",
-    "Reply emails",
-    "Study",
-    "Meditate",
-  ];
+      "Call mom",
+      "Pay bills",
+      "Clean kitchen",
+      "Workout",
+      "Walk dog",
+      "Reply emails",
+      "Study",
+      "Meditate",
+    ];
 
-  final List<String> taskLabels = [
-    "Groceries",
-    "Laundry",
-    "Call",
-    "Bills",
-    "Kitchen",
-    "Workout",
-    "Walk",
-    "Emails",
-    "Study",
-    "Calm",
-  ];
+    final List<String> taskLabels = [
+      "Groceries",
+      "Laundry",
+      "Call",
+      "Bills",
+      "Kitchen",
+      "Workout",
+      "Walk",
+      "Emails",
+      "Study",
+      "Calm",
+    ];
 
-  void addTask(String task) async {
-    if (task.isEmpty) return;
-    await _firestore.collection('users').doc(userId).collection('tasks').add({
-      'title': task,
-      'done': false,
-      'createdAt': Timestamp.now(),
-    });
-    controller.clear();
-  }
-
-  void quickAdd(String task) async {
-    await _firestore.collection('users').doc(userId).collection('tasks').add({
-      'title': task,
-      'done': false,
-      'createdAt': Timestamp.now(),
-    });
-  }
-
-  String _todayDay = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _updateTodayDate();
-    _firestore.collection('users').doc(userId).collection('tasks').add({
-    'title': 'Test Task',
-    'done': false,
-    'createdAt': Timestamp.now(),
-  });
-  }
-
-  void _updateTodayDate() {
-    final now = DateTime.now();
-    final dayNumber = DateFormat('d').format(now);
-    setState(() {
-      _todayDay = dayNumber;
-    });
-  }
-
-  void _onBottomNavTap(int index) async {
-    if (index == 2) {
-      final result = await showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.indigoAccent[700],
-        isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (context) => const AddTaskBottomSheet(),
-      );
-      if (result != null) {
-        await _firestore.collection('users').doc(userId).collection('tasks').add(result);
-      }
-    } else if (index == 1) {
-      context.go('/calendar');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.purple[50],
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios_new,
-            color: const Color.fromARGB(255, 243, 229, 245),
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Task Tracker',
-          style: TextStyle(
-            color: Colors.purple[50],
-            fontWeight: FontWeight.bold,
-            letterSpacing: .5,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.indigoAccent[700],
-      ),
-      body: Column(
-        children: [
-          SizedBox(
-            height: 75,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: commonTasks.length,
-              itemBuilder: (context, index) {
-                final fullTask = commonTasks[index];
-                final shortLabel = taskLabels[index];
-                return Container(
-                  width: 140,
-                  margin: EdgeInsets.symmetric(horizontal: 4, vertical: 12),
-                  child: Card(
-                    color: Colors.indigoAccent[700],
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              textAlign: TextAlign.center,
-                              shortLabel,
-                              style: TextStyle(
-                                color: Colors.purple[50],
-                                fontWeight: FontWeight.w500,
-                                fontSize: 15,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Center(
-                            child: IconButton(
-                              icon: Icon(Icons.add),
-                              iconSize: 25,
-                              color: Colors.purple[50],
-                              onPressed: () => quickAdd(fullTask),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          SizedBox(height: 25),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore
-                  .collection('users')
-                  .doc(userId)
-                  .collection('tasks')
-                  .orderBy('createdAt', descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                print('Has data: ${snapshot.hasData}');
-  if (snapshot.hasError) print('Error: ${snapshot.error}');
-                if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
-  
-                final taskDocs = snapshot.data!.docs;
-print('Fetched tasks:');
-for (var doc in taskDocs) {
-  print(' - ${doc.data()}');
+    void addTask(String task) {
+  if (task.isEmpty) return;
+  final newTask = Task(
+    id: '', 
+    title: task,
+    priority: 'Medium',
+    dueDate: null,
+    recurring: false,
+    done: false,
+    createdAt: DateTime.now(),
+  );
+  context.read<TaskBloc>().add(AddTask(newTask));
+  controller.clear();
 }
 
-                return ListView.builder(
-                  itemCount: taskDocs.length,
-                  itemBuilder: (context, index) {
-                    final doc = taskDocs[index];
-                    final task = doc.data() as Map<String, dynamic>;
+void quickAdd(String task) {
+  if (task.isEmpty) return;
+  context.read<TaskBloc>().add(QuickAddTask(task));
+}
 
-                    return Card(
-                      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      color: Colors.indigoAccent[700],
-                      child: ListTile(
-                        leading: Checkbox(
-                          value: task['done'],
-                          onChanged: (value) {
-                            _firestore
-                                .collection('users')
-                                .doc(userId)
-                                .collection('tasks')
-                                .doc(doc.id)
-                                .update({'done': value});
-                          },
-                          checkColor: Colors.purple[50],
-                          activeColor: Colors.green,
-                        ),
-                        title: Text(
-                          task['title'],
-                          style: TextStyle(
-                            decoration: task['done']
-                                ? TextDecoration.lineThrough
-                                : TextDecoration.none,
-                            color: Colors.purple[50],
-                            fontWeight: FontWeight.w500,
-                            fontSize: 17,
-                          ),
-                        ),
-                        trailing: IconButton(
-                          icon: Icon(Icons.delete, color: Colors.purple[50]),
-                          onPressed: () {
-                            _firestore
-                                .collection('users')
-                                .doc(userId)
-                                .collection('tasks')
-                                .doc(doc.id)
-                                .delete();
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
+
+
+    String _todayDay = '';
+
+    @override
+    void initState() {
+      super.initState();
+      _updateTodayDate();
+    }
+
+    void _updateTodayDate() {
+      final now = DateTime.now();
+      final dayNumber = DateFormat('d').format(now);
+      setState(() {
+        _todayDay = dayNumber;
+      });
+    }
+
+    void _onBottomNavTap(int index) async {
+  if (index == 2) {
+    final result = await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.indigoAccent[700],
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => const AddTaskBottomSheet(),
+    );
+    if (result != null && result is Map<String, dynamic>) {
+      final task = Task(
+        id: '',
+        title: result['title'],
+        priority: result['priority'] ?? 'Medium',
+        dueDate: result['dueDate'] is DateTime ? result['dueDate'] : null,
+        recurring: result['recurring'] ?? false,
+        done: false,
+        createdAt: DateTime.now(),
+      );
+      context.read<TaskBloc>().add(AddTask(task));
+    }
+  } else if (index == 1) {
+    context.go('/calendar');
+  }
+}
+
+
+    @override
+    Widget build(BuildContext context) {
+      return Scaffold(
+        backgroundColor: Colors.purple[50],
+        appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(
+              Icons.arrow_back_ios_new,
+              color: const Color.fromARGB(255, 243, 229, 245),
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Text(
+            'Task Tracker',
+            style: TextStyle(
+              color: Colors.purple[50],
+              fontWeight: FontWeight.bold,
+              letterSpacing: .5,
             ),
           ),
-        ],
+          centerTitle: true,
+          backgroundColor: Colors.indigoAccent[700],
+        ),
+        body: Column(
+          children: [
+            SizedBox(
+              height: 75,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: commonTasks.length,
+                itemBuilder: (context, index) {
+                  final fullTask = commonTasks[index];
+                  final shortLabel = taskLabels[index];
+                  return Container(
+                    width: 140,
+                    margin: EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+                    child: Card(
+                      color: Colors.indigoAccent[700],
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                textAlign: TextAlign.center,
+                                shortLabel,
+                                style: TextStyle(
+                                  color: Colors.purple[50],
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 15,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Center(
+                              child: IconButton(
+                                icon: Icon(Icons.add),
+                                iconSize: 25,
+                                color: Colors.purple[50],
+                                onPressed: () => quickAdd(fullTask),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            SizedBox(height: 25),
+            Expanded(
+              child: Expanded(
+  child: BlocBuilder<TaskBloc, TaskState>(
+    builder: (context, state) {
+      if (state is TaskLoading) {
+        return const Center(child: CircularProgressIndicator());
+      } else if (state is TaskLoaded) {
+        final tasks = state.tasks;
+
+        if (tasks.isEmpty) {
+          return const Center(child: Text('No tasks available.'));
+        }
+
+        return ListView.builder(
+          itemCount: tasks.length,
+          itemBuilder: (context, index) {
+            final task = tasks[index];
+
+            return Card(
+              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              color: Colors.indigoAccent[700],
+              child: ListTile(
+                leading: Checkbox(
+  value: task.done,
+  onChanged: (value) {
+    context.read<TaskBloc>().add(UpdateTask(task.copyWith(done: value)));
+  },
+  checkColor: Colors.purple[50],
+  activeColor: Colors.green,
+  side: BorderSide(
+    color: Colors.purple[50]!,
+    width: 2,
+  ),
+),
+
+                title: Text(
+                  task.title,
+                  style: TextStyle(
+                    decoration: task.done ? TextDecoration.lineThrough : TextDecoration.none,
+                    color: Colors.purple[50],
+                    fontWeight: FontWeight.w500,
+                    fontSize: 17,
+                  ),
+                ),
+                trailing: IconButton(
+                  icon: Icon(Icons.delete, color: Colors.purple[50]),
+                  onPressed: () {
+                    context.read<TaskBloc>().add(DeleteTask(task.id));
+                  },
+                ),
+              ),
+            );
+          },
+        );
+      } else if (state is TaskError) {
+        return Center(child: Text('Error: ${state.message}'));
+      } else {
+        return const Center(child: Text('Unknown state'));
+      }
+    },
+  ),
+),
+
+            ),
+          ],
       ),
     );
   }

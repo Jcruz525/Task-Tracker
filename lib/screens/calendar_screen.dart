@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart';
+import '../bloc/task_bloc.dart';
+import '../bloc/task_state.dart';
+import '../models/task.dart';
+import '../bloc/task_event.dart';
 
-
-// Make this Calendar functional and pull data from Firestore
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
 
@@ -11,7 +15,7 @@ class CalendarPage extends StatefulWidget {
 }
 
 class _CalendarPageState extends State<CalendarPage> {
-  late final Map<DateTime, List<String>> _events;
+  late Map<DateTime, List<Task>> _events;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
@@ -19,20 +23,27 @@ class _CalendarPageState extends State<CalendarPage> {
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
-
-    _events = {
-      _stripTime(DateTime.now()): ['Meeting', 'Buy groceries'],
-      _stripTime(DateTime.now().add(Duration(days: 1))): ['Workout'],
-      _stripTime(DateTime.now().subtract(Duration(days: 1))): ['Call Mom'],
-    };
+    _events = {};
+    context.read<TaskBloc>().add(LoadTasks());
   }
 
-  DateTime _stripTime(DateTime date) {
-    return DateTime(date.year, date.month, date.day);
-  }
+  
+  DateTime _stripTime(DateTime date) => DateTime(date.year, date.month, date.day);
 
-  List<String> _getEventsForDay(DateTime day) {
-    return _events[_stripTime(day)] ?? [];
+  List<Task> _getEventsForDay(DateTime day) => _events[_stripTime(day)] ?? [];
+
+  
+  void _groupTasksByDate(List<Task> tasks) {
+    final Map<DateTime, List<Task>> grouped = {};
+    for (final task in tasks) {
+      if (task.dueDate != null) {
+        final dayKey = _stripTime(task.dueDate!);
+        grouped.putIfAbsent(dayKey, () => []).add(task);
+      }
+    }
+    setState(() {
+      _events = grouped;
+    });
   }
 
   @override
@@ -42,50 +53,92 @@ class _CalendarPageState extends State<CalendarPage> {
         title: const Text('Calendar'),
         backgroundColor: Colors.indigoAccent[700],
       ),
-      body: Column(
-        children: [
-          TableCalendar<String>(
-            firstDay: DateTime.utc(2020, 1, 1),
-            lastDay: DateTime.utc(2030, 12, 31),
-            focusedDay: _focusedDay,
-            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            eventLoader: _getEventsForDay,
-            onDaySelected: (selected, focused) {
-              setState(() {
-                _selectedDay = selected;
-                _focusedDay = focused;
-              });
-            },
-            calendarStyle: CalendarStyle(
-              todayDecoration: BoxDecoration(
-                color: Colors.indigoAccent,
-                shape: BoxShape.circle,
-              ),
-              selectedDecoration: BoxDecoration(
-                color: Colors.purple,
-                shape: BoxShape.circle,
-              ),
-              markerDecoration: BoxDecoration(
-                color: Colors.deepOrange,
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: _getEventsForDay(_selectedDay!).map((event) {
-                return Card(
-                  child: ListTile(
-                    leading: Icon(Icons.event_note, color: Colors.indigo),
-                    title: Text(event),
+      body: BlocConsumer<TaskBloc, TaskState>(
+        listener: (context, state) {
+          if (state is TaskLoaded) {
+            _groupTasksByDate(state.tasks);
+          }
+        },
+        builder: (context, state) {
+          if (state is TaskLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (state is TaskLoaded) {
+            return Column(
+              children: [
+                TableCalendar<Task>(
+                  firstDay: DateTime.utc(2020, 1, 1),
+                  lastDay: DateTime.utc(2030, 12, 31),
+                  focusedDay: _focusedDay,
+                  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                  eventLoader: _getEventsForDay,
+                  calendarStyle: CalendarStyle(
+                    todayDecoration: BoxDecoration(
+                      color: Colors.indigoAccent,
+                      shape: BoxShape.circle,
+                    ),
+                    selectedDecoration: BoxDecoration(
+                      color: Colors.purple,
+                      shape: BoxShape.circle,
+                    ),
+                    markerDecoration: BoxDecoration(
+                      color: Colors.deepOrange,
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                );
-              }).toList(),
-            ),
-          ),
-        ],
+                  onDaySelected: (selectedDay, focusedDay) {
+                    setState(() {
+                      _selectedDay = selectedDay;
+                      _focusedDay = focusedDay;
+                    });
+                  },
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: _getEventsForDay(_selectedDay!).isEmpty
+                      ? Center(
+                          child: Text(
+                            'No tasks for ${DateFormat.yMMMd().format(_selectedDay!)}',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        )
+                      : ListView(
+                          padding: const EdgeInsets.all(16),
+                          children: _getEventsForDay(_selectedDay!).map((task) {
+                            return Card(
+                              color: Colors.indigoAccent[700],
+                              child: ListTile(
+                                leading: Icon(Icons.event_note, color: Colors.purple[50]),
+                                title: Text(
+                                  task.title,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                subtitle: Text(
+                                  'Priority: ${task.priority}',
+                                  style: const TextStyle(color: Colors.white70),
+                                ),
+                                trailing: Checkbox(
+                                  value: task.done,
+                                  onChanged: (value) {
+                                    final updatedTask = task.copyWith(done: value);
+                                    context.read<TaskBloc>().add(UpdateTask(updatedTask));
+                                  },
+                                  checkColor: Colors.purple[50],
+                                  activeColor: Colors.green,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                ),
+              ],
+            );
+          }
+          if (state is TaskError) {
+            return Center(child: Text('Error: ${state.message}'));
+          }
+          return const Center(child: Text('No tasks loaded'));
+        },
       ),
     );
   }

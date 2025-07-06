@@ -5,16 +5,28 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:go_router/go_router.dart';
 import 'package:task_tracker/screens/calendar_screen.dart';
-import 'package:task_tracker/task_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'bloc/task_bloc.dart';
+import 'bloc/task_event.dart';
+import 'bloc/task_state.dart';
+import 'bloc/auth_cubit.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(ToDoApp());
+
+  runApp(
+    BlocProvider<AuthCubit>(
+      create: (context) => AuthCubit(FirebaseAuth.instance),
+      child: const ToDoApp(),
+    ),
+  );
 }
+
+
 
 final GoRouter _router = GoRouter(
   initialLocation: '/',
@@ -51,7 +63,7 @@ class MainScaffold extends StatefulWidget {
 }
 class _MainScaffoldState extends State<MainScaffold> {
    int currentIndex = 0;
-  final TaskStorage storage = TaskStorage();
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   late String _todayDay;
   late String userId;
@@ -163,10 +175,28 @@ class ToDoApp extends StatelessWidget {
   const ToDoApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      title: 'To-Do List',
-      routerConfig: _router,
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, authState) {
+        if (authState.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (authState.user == null) {
+          return MaterialApp(
+            home: LandingPage(),
+          );
+        }
+
+        return BlocProvider<TaskBloc>(
+          create: (_) => TaskBloc(
+            firestore: FirebaseFirestore.instance,
+            userId: authState.user!.uid,
+          )..add(LoadTasks()),
+          child: MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            routerConfig: _router,
+          ),
+        );
+      },
     );
   }
 }

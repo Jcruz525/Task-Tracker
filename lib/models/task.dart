@@ -34,6 +34,18 @@ class Task extends Equatable {
       createdAt: (data['createdAt'] as Timestamp).toDate(),
     );
   }
+  factory Task.fromMap(String id, Map<String, dynamic> data) {
+  return Task(
+    id: id,
+    title: data['title'] ?? '',
+    priority: data['priority'] ?? 'Medium',
+    dueDate: (data['dueDate'] as Timestamp?)?.toDate(),
+    recurring: data['recurring'] ?? false,
+    done: data['done'] ?? false,
+    createdAt: (data['createdAt'] as Timestamp).toDate(),
+  );
+}
+
 
   Map<String, dynamic> toMap() {
     return {
