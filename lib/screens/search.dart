@@ -57,7 +57,8 @@ class _SearchPageState extends State<SearchPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:Text('Search Tasks',style: TextStyle(color: Colors.purple[50]!)),
+        title:Text('Search Tasks',style: TextStyle(color: Colors.purple[50]!,fontWeight: FontWeight.bold,
+              letterSpacing: .5,)),
         centerTitle: true,
         backgroundColor: Colors.indigoAccent[700],
       ),

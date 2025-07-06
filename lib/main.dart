@@ -10,11 +10,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'bloc/task_bloc.dart';
 import 'bloc/task_event.dart';
-import 'bloc/task_state.dart';
 import 'bloc/auth_cubit.dart';
 import 'widgets/add_task_modal.dart';
 import 'models/task.dart';
 import 'package:task_tracker/screens/search.dart';
+import 'repositories/user_repositories.dart';
+import 'screens/profile_page.dart';
+import 'bloc/user_Profiles/profile_bloc.dart';
+import 'bloc/user_Profiles/profile_event.dart';
+
 
 
 void main() async {
@@ -56,6 +60,17 @@ final GoRouter _router = GoRouter(
           path: '/search',
           builder: (context, state) => const SearchPage(),
         ),
+       GoRoute(
+  path: '/settings',
+  builder: (context, state) {
+    return BlocProvider(
+      create: (_) => ProfileBloc(UserRepository())..add(LoadProfile()),
+      child: const ProfilePage(),
+    );
+  },
+),
+
+
       ],
     ),
   ],

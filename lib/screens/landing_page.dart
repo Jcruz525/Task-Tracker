@@ -191,8 +191,12 @@ class _LandingPageState extends State<LandingPage> {
                     print("User created: ${userCredential.user?.uid}");
                   }
 
-                  // Navigate to TaskTracker if login/signup succeeds
-                  context.go('/tasktracker');
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+  if (!mounted) return;
+  context.go('/tasktracker'); 
+});
+
+
                 } on FirebaseAuthException catch (e) {
                   print("FirebaseAuth error: ${e.code}");
                 }
