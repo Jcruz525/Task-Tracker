@@ -214,22 +214,6 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-
-  Color _getAppBarColor(BuildContext context) {
-    final state = context.watch<ProfileBloc>().state;
-    if (state is ProfileLoaded) {
-      switch (state.preferences.themeColor) {
-        case 'green':
-          return Colors.green;
-        case 'red':
-          return Colors.red;
-        default:
-          return Colors.blue;
-      }
-    }
-    return Colors.blue;
-  }
-
   Color _colorFromName(String name) {
     switch (name) {
       case 'green':
