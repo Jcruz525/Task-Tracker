@@ -94,6 +94,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     super.initState();
     final now = DateTime.now();
     _todayDay = now.day.toString();
+    print("Today is: $_todayDay");
     userId = FirebaseAuth.instance.currentUser!.uid;
   }
 
@@ -148,32 +149,45 @@ class _MainScaffoldState extends State<MainScaffold> {
         backgroundColor: Colors.indigoAccent[700],
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Icon(Icons.calendar_today, size: 30, color: Colors.white),
-                Positioned(
-                  top: 4.5,
-                  right: 3.5,
-                  child: Container(
-                    width: 22,
-                    alignment: Alignment.center,
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(color: Colors.transparent),
-                    child: Text(
-                      _todayDay,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.purple[50],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            label: 'Today',
+  icon: SizedBox(
+    width: 40,
+    height: 40,
+    child: Stack(
+      alignment: Alignment.center,
+      children: [
+        const Icon(
+          Icons.calendar_today,
+          size: 30,
+          color: Colors.white,
+        ),
+        
+        Container(
+          width: 20,
+          height: 20,
+          alignment: Alignment.center,
+          decoration: const BoxDecoration(
+            color: Colors.transparent,
           ),
+          child: FittedBox(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text(
+                _todayDay,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+  label: 'Today',
+),
+
           const BottomNavigationBarItem(
             backgroundColor: Colors.white,
             icon: Icon(

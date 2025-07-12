@@ -139,7 +139,7 @@ class _AddTaskModalState extends State<AddTaskModal> {
                 value: _isRecurring,
                 onChanged: (val) => setState(() => _isRecurring = val),
                 activeColor: Colors.purple[50],
-                activeTrackColor: const Color.fromARGB(255, 21, 32, 21),
+                activeTrackColor: Colors.green[600],
                 inactiveThumbColor: Colors.purple[50],
                 inactiveTrackColor: Colors.grey[700],
               ),
