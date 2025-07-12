@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
@@ -189,12 +191,7 @@ class _LandingPageState extends State<LandingPage> {
                     print("User created: ${userCredential.user?.uid}");
                   }
 
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-  if (!mounted) return;
-  context.go('/tasktracker'); 
-});
-
-
+                  context.go('/tasktracker');
                 } on FirebaseAuthException catch (e) {
                   print("FirebaseAuth error: ${e.code}");
                 }

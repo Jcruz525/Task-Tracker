@@ -147,6 +147,7 @@ class _SearchPageState extends State<SearchPage> {
                               task.title,
                               style: TextStyle(
                                 color: Colors.purple[50],
+                                fontWeight: FontWeight.bold,
                                 decoration: task.done
                                     ? TextDecoration.lineThrough
                                     : TextDecoration.none,
@@ -154,10 +155,11 @@ class _SearchPageState extends State<SearchPage> {
                             ),
                             subtitle: Text(
                               'Priority: ${task.priority}${task.dueDate != null ? ', Due: ${DateFormat.yMMMd().format(task.dueDate!)}' : ''}',
-  style: TextStyle(color: Colors.purple[100]),
+  style: TextStyle(color: Colors.purple[50]),
                             ),
                             trailing: Checkbox(
                               value: task.done,
+                              side: BorderSide(color: Colors.purple[50]!, width: 2),
                               onChanged: (val) {
                                 context
                                     .read<TaskBloc>()
