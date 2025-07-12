@@ -45,7 +45,7 @@ class _ProfilePageState extends State<ProfilePage> {
         await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
 
     if (pickedFile == null) return;
-
+if (!mounted) return;
     setState(() {
       _uploading = true;
     });
@@ -58,9 +58,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
       final uploadTask = await storageRef.putFile(file);
       final downloadUrl = await uploadTask.ref.getDownloadURL();
-
+if (!mounted) return;
       context.read<ProfileBloc>().add(UpdateAvatar(downloadUrl));
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to upload image: $e')),
       );

@@ -108,7 +108,7 @@ class _MainScaffoldState extends State<MainScaffold> {
       ),
       builder: (context) => const AddTaskModal(),
     );
-
+          if (!mounted) return;
     if (result != null && result is Map<String, dynamic>) {
       final task = Task(
         id: '',

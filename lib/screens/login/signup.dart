@@ -169,6 +169,7 @@ class _LandingPageState extends State<LandingPage> {
                 try {
                   if (isLoggingIn) {
                     // Login flow
+                   
                     UserCredential userCredential = await FirebaseAuth.instance
                         .signInWithEmailAndPassword(
                           email: emailController.text,
@@ -177,6 +178,7 @@ class _LandingPageState extends State<LandingPage> {
                     print("Logged in: ${userCredential.user?.uid}");
                   } else {
                     // Signup flow
+
                     if (passwordController.text !=
                         confirmPasswordController.text.trim()) {
                       print("Passwords do not match.");
@@ -190,7 +192,7 @@ class _LandingPageState extends State<LandingPage> {
                         );
                     print("User created: ${userCredential.user?.uid}");
                   }
-
+                  if (!context.mounted) return;
                   context.go('/tasktracker');
                 } on FirebaseAuthException catch (e) {
                   print("FirebaseAuth error: ${e.code}");

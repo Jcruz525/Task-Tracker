@@ -37,7 +37,7 @@ class _AddTaskModalState extends State<AddTaskModal> {
           .doc(userId)
           .collection('tasks')
           .add(newTask);
-
+      if (!mounted) return;
       Navigator.pop(context); 
     } catch (e) {
       print('Error adding task: $e');
